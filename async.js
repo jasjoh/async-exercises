@@ -2,6 +2,8 @@ const NUMBERS_API_BASE_URL = 'http://numbersapi.com';
 const FAVORITE_NUM = 7;
 const FAVORITE_NUMS = [1,2,3,4,5];
 
+const DECK_API_BASE_URL = 'https://deckofcardsapi.com/api/deck/'
+
 /**
  * Accept a number.
  * Calls numbersapi.com with number to retrieve a fact.
@@ -50,7 +52,6 @@ async function getFactsAboutNums(nums) {
  * Calls the numbersapi.com to retrieve four facts about that number.
  * Returns an array of strings with those facts.
  */
-
 async function getFourFacts(num) {
   const facts = [];
 
@@ -70,5 +71,54 @@ async function getFourFacts(num) {
   return facts;
 }
 
+// displayFacts();
 
-displayFacts();
+/**
+ * Leverages the deck of cards API.
+ * Shuffles a new deck of cards then retrieves and returns a card.
+ */
+async function shuffleAndGetCard() {
+  let axiosResponse = await axios.get(
+    `${DECK_API_BASE_URL}/new/shuffle/?deck_count=1`
+    );
+  const deckId = axiosResponse.data.deck_id;
+
+  axiosResponse = await axios.get(
+    `${DECK_API_BASE_URL}/${deckId}/draw/?count=1`
+  );
+  const cardValue = axiosResponse.data.cards[0].value;
+  const cardSuit = axiosResponse.data.cards[0].suit;
+  console.log(cardValue + " of " + cardSuit);
+}
+
+/**
+ * Leverages the deck of cards API.
+ * Shuffles a new deck of cards then retrieves and returns two cards.
+ */
+async function shuffleAndGetTwoCards() {
+  let axiosResponse = await axios.get(
+    `${DECK_API_BASE_URL}/new/shuffle/?deck_count=1`
+    );
+  const deckId = axiosResponse.data.deck_id;
+
+  let arrayOfPromises = [];
+  let i = 1;
+  while (i <= 2) {
+    let axiosResponsePromise = axios.get(
+      `${DECK_API_BASE_URL}/${deckId}/draw/?count=1`
+    );
+    arrayOfPromises.push(axiosResponsePromise);
+    i++;
+  }
+  const promises = await Promise.allSettled(arrayOfPromises);
+
+  for (let promise of promises) {
+    const cardValue = promise.value.data.cards[0].value;
+    const cardSuit = promise.value.data.cards[0].suit;
+    promises.pop();
+    console.log(cardValue + " of " + cardSuit);
+  }
+}
+
+shuffleAndGetCard();
+shuffleAndGetTwoCards()
